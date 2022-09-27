@@ -51,6 +51,30 @@ class EasyApplyLinkedin:
         time.sleep(1)
         search_location.send_keys(Keys.RETURN)
 
+    def filter_jobs(self):
+        """This function filters all the job results by 'Easy Apply'"""
+
+        all_filters_button = self.driver.find_element(By.XPATH,
+                                                      '//*[@id="search-reusables__filters-bar"]/div/div/button')
+        all_filters_button.click()
+        time.sleep(1)
+
+        easy_apply_button = self.driver.find_element(By.CLASS_NAME, 'jobs-search-advanced-filters__binary-toggle')
+        easy_apply_button.click()
+        time.sleep(1)
+
+        intership_button = self.driver.find_element(By.XPATH, "//label[@for='advanced-filter-experience-1']")
+        intership_button.click()
+        time.sleep(1)
+
+        entry_level_button = self.driver.find_element(By.XPATH, "//label[@for='advanced-filter-experience-2']")
+        entry_level_button.click()
+        time.sleep(1)
+
+        apply_filter_button = self.driver.find_element(By.XPATH, "//*[@class='justify-flex-end display-flex mv3 "
+                                                                 "mh2']/button[2]")
+        apply_filter_button.click()
+
 
 if __name__ == "__main__":
     with open('config.json') as config_file:
@@ -65,3 +89,6 @@ if __name__ == "__main__":
     time.sleep(3)
 
     bot.enter_keywords_and_location()
+    time.sleep(3)
+
+    bot.filter_jobs()
