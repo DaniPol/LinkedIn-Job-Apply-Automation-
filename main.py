@@ -8,9 +8,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 
 
-
-
-
 class EasyApplyLinkedin:
 
     def __init__(self, data):
@@ -86,20 +83,30 @@ class EasyApplyLinkedin:
         # all available pages)
         total_results = self.driver.find_element(By.CLASS_NAME, "display-flex.t-12.t-black--light.t-normal")
         total_results_int = int(total_results.text.split(' ', 1)[0].replace(",", ""))
-
         time.sleep(3)
 
-        # get results for the first page
-        current_page = self.driver.current_url
-        results = self.driver.find_elements(By.CLASS_NAME,
-                                            "ember-view.jobs-search-results__list-item.occludable-update.p0.relative"
-                                            ".scaffold-layout__list-item")
+        num_of_pages = 1
+        flag = 1
+        page_number = 2
 
-        # for each job add, submits application if no questions asked
-        for result in results:
-            hover = ActionChains(self.driver).move_to_element(result)
-            hover.perform()
-            self.submit_apply(result)
+        while num_of_pages > 0:
+            results = self.driver.find_elements(By.CLASS_NAME,
+                                                "ember-view.jobs-search-results__list-item.occludable-update.p0"
+                                                ".relative.scaffold-layout__list-item")
+
+            if flag:
+                num_of_pages = total_results_int // len(results)
+                flag = 0
+
+            for result in results:
+                hover = ActionChains(self.driver).move_to_element(result)
+                hover.perform()
+                self.submit_apply(result)
+
+            num_of_pages -= 1
+            apply_filter_button = self.driver.find_element(By.XPATH, f"//*[@aria-label='Page {page_number}']")
+            apply_filter_button.click()
+            page_number += 1
 
     def submit_apply(self, job_add):
         """This function submits the application for the job add found"""
