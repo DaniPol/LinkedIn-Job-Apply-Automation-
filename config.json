@@ -1,7 +1,16 @@
-{
-  "email": "",
-  "password": "",
-  "keywords": "",
-  "location": "",
-  "driver_path": ""
+{"user_conf":
+  {
+    "email": "",
+    "password": "",
+    "keywords": "",
+    "location": "",
+    "driver_path": ""
+  },
+  "linkedin_conf":
+  {
+    "python" : "3",
+    "java" : "3",
+    "c" : "3",
+    "oop" : "3"
+  }
 }
