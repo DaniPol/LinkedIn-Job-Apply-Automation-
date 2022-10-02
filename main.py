@@ -11,11 +11,12 @@ from selenium.common.exceptions import NoSuchElementException
 class EasyApplyLinkedin:
 
     def __init__(self, data):
-        self.email = data['email']
-        self.password = data['password']
-        self.keywords = data['keywords']
-        self.location = data['location']
-        self.driver = webdriver.Edge(service=Service(data['driver_path']))
+        self.email = data['user_conf']['email']
+        self.password = data['user_conf']['password']
+        self.keywords = data['user_conf']['keywords']
+        self.location = data['user_conf']['location']
+        self.driver = webdriver.Edge(service=Service(data['user_conf']['driver_path']))
+        self.questions_answers = data['linkedin_conf']
 
     def login_linkedin(self):
         """This function logs into your personal LinkedIn profile"""
@@ -115,16 +116,32 @@ class EasyApplyLinkedin:
         job_add.click()
         time.sleep(3)
 
+        if self.already_applied():
+            return
+        num_of_submit_tries = 0
+        while not self.submit_application() and num_of_submit_tries < 5:
+            self.next_step()
+            self.answer_additional_questions()
+            self.review_application()
+            num_of_submit_tries += 1
+
+        if num_of_submit_tries > 5:
+            self.exit_application()
+
+        time.sleep(1)
+
+    def already_applied(self):
         # click on the easy apply button, skip if already applied to the position
         try:
             in_apply = self.driver.find_element(By.XPATH, "//*[@class='jobs-apply-button--top-card']/button")
             in_apply.click()
         except NoSuchElementException:
             print('You already applied to this job, go to next...')
-            pass
-        time.sleep(3)
+            return 1
 
-        # try to submit if submit application is available...
+        return 0
+
+    def submit_application(self):
         try:
             submit = self.driver.find_element(By.XPATH, "//button[@aria-label='Submit application']")
             submit.send_keys(Keys.RETURN)
@@ -135,22 +152,76 @@ class EasyApplyLinkedin:
             dismiss.click()
             print("Dismiss pressed")
             time.sleep(3)
-        # ... if not available, discard application and go to next
-        except NoSuchElementException:
-            print('Not direct application, going to next...')
-            try:
-                discard = self.driver.find_element(By.XPATH, "//*[@class='artdeco-modal__dismiss artdeco-button "
-                                                             "artdeco-button--circle artdeco-button--muted "
-                                                             "artdeco-button--2 artdeco-button--tertiary ember-view']")
-                discard.send_keys(Keys.RETURN)
-                time.sleep(3)
-                discard_confirm = self.driver.find_element(By.XPATH, "//button[@data-test-dialog-secondary-btn]")
-                discard_confirm.send_keys(Keys.RETURN)
-                time.sleep(3)
-            except NoSuchElementException:
-                pass
 
-        time.sleep(1)
+            return 1
+        except NoSuchElementException:
+            print("Did not find submit button")
+
+            return 0
+
+    def next_step(self):
+        try:
+            next_step = self.driver.find_element(By.XPATH, "//*[@aria-label='Continue to next step']")
+            next_step.click()
+        except NoSuchElementException:
+            print("Did not find next button")
+
+    def review_application(self):
+        try:
+            review_application = self.driver.find_element(By.XPATH, "//*[@aria-label='Review your application']")
+            review_application.click()
+
+        except NoSuchElementException:
+            print("Did not find review button")
+
+
+    def close_session(self):
+        """This function closes the actual session"""
+
+        print('End of the session, see you later!')
+        self.driver.close()
+
+    def exit_application(self):
+        discard = self.driver.find_element(By.XPATH, "//*[@class='artdeco-modal__dismiss artdeco-button "
+                                                     "artdeco-button--circle artdeco-button--muted "
+                                                     "artdeco-button--2 artdeco-button--tertiary ember-view']")
+        discard.send_keys(Keys.RETURN)
+        time.sleep(3)
+        discard_confirm = self.driver.find_element(By.XPATH, "//button[@data-test-dialog-secondary-btn]")
+        discard_confirm.send_keys(Keys.RETURN)
+        time.sleep(3)
+
+    def answer_additional_questions(self):
+        try:
+            window_data = self.driver.find_element(By.CLASS_NAME, "pb4")
+            num_of_questions = self.num_of_qestions_to_answer(window_data)
+
+            for i in range(num_of_questions):
+                question_label = self.driver.find_element(By.XPATH, f"//*[@class='pb4']/div[{i+1}]/div/div/div/input")
+                #TODO refactor question_text and ans(maybe more)
+                question_text = self.driver.find_element(By.XPATH, f"//*[@class='pb4']/div[{i+1}]").text
+                time.sleep(3)
+                ans = self.answer_for_question(question_text)
+                question_label.send_keys(ans)
+
+
+        except NoSuchElementException:
+            print("Did not find additional questions button")
+            pass
+
+    def num_of_qestions_to_answer(self, questions):
+        return questions.text.count('?')
+
+    def answer_for_question(self, question):
+        for q in self.questions_answers:
+            #TODO change if to func that checks if the word is in question and not only part of it (C language and not only letter c in word)
+            if q in question:
+                return self.questions_answers[q]
+
+        return "1"
+
+
+
 
 
 if __name__ == "__main__":
@@ -172,3 +243,5 @@ if __name__ == "__main__":
     time.sleep(3)
 
     bot.find_job_offers()
+
+    bot.close_session()
