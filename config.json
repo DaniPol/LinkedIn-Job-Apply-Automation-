@@ -1,16 +1,36 @@
-{"user_conf":
+{
+  "user_conf":
   {
     "email": "",
     "password": "",
     "keywords": "",
     "location": "",
-    "driver_path": ""
+    "driver_path": "",
+    "logs" : true
   },
-  "linkedin_conf":
+
+  "linkedin_question_answer":
   {
     "python" : "3",
     "java" : "3",
     "c" : "3",
-    "oop" : "3"
+    "oop" : "3",
+    "sql" : "3",
+    "git" : "3"
+  },
+
+  "linkedin_filters" :
+  {
+    "experience level" :
+    {
+      "internship" : false,
+      "entry_level" : false,
+      "associate" : false,
+      "mid-senior_level" : false,
+      "director" : false,
+      "executive" : false
+    },
+
+    "easy_apply" : true
   }
 }
