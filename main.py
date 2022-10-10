@@ -26,6 +26,7 @@ class EasyApplyLinkedin:
         # LinkedIn configuration
         self.questions_answers = data['linkedin_question_answer']
         self.filters = data['linkedin_filters']
+        self.num_jobs_to_apply = data['num_jobs_to_apply']
 
         if self.logs:
             print("EasyApplyLinkedin was successfully initialized with configure data")
@@ -116,7 +117,7 @@ class EasyApplyLinkedin:
             print('Filters applied to job search')
 
     def find_job_offers(self):
-        """Find all job applications of job search result, run the submit_apply() function to submit job applciation and go to next page when all jobs are applied in current page"""
+        """Find all job applications of job search result, run the submit_apply() function to submit job applciation ( if didnt exceed the number of jobs to apply) and go to next page when all jobs are applied in current page"""
 
         # Get the amount of jobs available for applying
         total_results = self.driver.find_element(By.CLASS_NAME, 'display-flex.t-12.t-black--light.t-normal')
@@ -133,8 +134,7 @@ class EasyApplyLinkedin:
         while num_of_pages > 0:
 
             # Get the job application in current page
-            results = self.driver.find_elements(By.CLASS_NAME,
-                                                'ember-view.jobs-search-results__list-item.occludable-update.p0.relative.scaffold-layout__list-item')
+            results = self.driver.find_elements(By.CLASS_NAME, 'ember-view.jobs-search-results__list-item.occludable-update.p0.relative.scaffold-layout__list-item')
 
             # Calculate the number of pages (only ones)
             if flag:
@@ -150,6 +150,11 @@ class EasyApplyLinkedin:
                 hover.perform()
                 self.submit_apply(result)
 
+                # If submitted the numer of jobs in the conf, exit code
+                if not self.num_jobs_to_apply:
+                    self.close_session()
+                    exit()
+
             # Go to next page of job search result
             num_of_pages -= 1
             self.driver.find_element(By.XPATH, f'//*[@aria-label="Page {page_number}"]').click()
@@ -160,7 +165,7 @@ class EasyApplyLinkedin:
             page_number += 1
 
     def submit_apply(self, job_application):
-        """Try submitting job application using the functions submit_application(), next_step(), self.review_application() and review_application(). If not submitted in 5 tries, exit application"""
+        """Try submitting job application using the functions submit_application(), next_step(), self.review_application() and review_application(), if submited decrease the number of jobs left to apply. If not submitted in 5 tries, exit application"""
 
         if self.logs:
             print(f'\nYou are applying to the position of: {job_application.text}')
@@ -188,7 +193,14 @@ class EasyApplyLinkedin:
         if num_of_submit_tries > 4:
             self.exit_application()
 
+        # If applied to job decrease the number of jobs left to apply
+        self.num_jobs_to_apply -= 1
+
+        if self.logs:
+            print(f'{self.num_jobs_to_apply} jobs left to apply to')
+
         time.sleep(1)
+
 
     def already_applied(self):
         """If already applied, don't try to apply job application.

@@ -32,5 +32,7 @@
     },
 
     "easy_apply" : true
-  }
+  },
+
+  "num_jobs_to_apply" : 2
 }
