@@ -190,8 +190,8 @@ class EasyApplyLinkedin:
             if self.logs:
                 print(f'Try to submit number = {num_of_submit_tries + 1}')
 
-            self.choose_cv()
             self.next_step()
+            self.choose_cv()
             self.answer_additional_questions()
             self.review_application()
             if self.submit_application():
