@@ -1,0 +1,60 @@
+{
+  "user_conf":
+  {
+    "email": "User Email",
+    "password": "User Password",
+    "driver_path": "driver/msedgedriver (or other path if files moved)",
+    "logs" : true
+  },
+
+  "linkedin_questions_answers":
+  {
+    "question key word" : "answer",
+    "python" : "3",
+    "java" : "3",
+    "c" : "3",
+    "oop" : "3",
+    "sql" : "3",
+    "git" : "3",
+    "engineering" : "3",
+    "deep": "2",
+    "dnn" : "2",
+    "computer" : "2",
+    "vision" : "2",
+    "data" : "2",
+    "scientist" : "2",
+    "development" : "3",
+    "machine" : "2",
+    "databases" : "2",
+    "object-oriented" : "2",
+    "salary" :  "20000",
+    "notice" : "not required",
+    "patterns" : "2"
+
+  },
+
+  "linkedin_filters" :
+  {
+    "experience level" :
+    {
+      "internship" : false,
+      "entry_level" : false,
+      "associate" : false,
+      "mid-senior_level" : false,
+      "director" : false,
+      "executive" : false
+    },
+
+    "easy_apply" : true
+  },
+
+  "linkedin_keywords_and_applications_number_to_apply" :
+  {
+    "keyword for job" : "number of jobs to apply",
+    "junior software developer" : 5
+
+  },
+
+  "linkedin_location" : ["location", "Israel"]
+
+}
