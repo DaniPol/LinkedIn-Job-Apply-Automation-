@@ -9,91 +9,97 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support.ui import Select
 
-
+# keywords [junior software developer, python, machine learning, deep learning, AI, data scientist, software developer]
+# locations [tel aviv, israel]
 class EasyApplyLinkedin:
 
     def __init__(self, data):
         """Initialize the EasyApplyLinkedin instance with user and LinkedIn configuration and data"""
 
         # User configuration
-        self.email = data['user_conf']['email']
-        self.password = data['user_conf']['password']
-        self.keywords = data['user_conf']['keywords']
-        self.location = data['user_conf']['location']
-        self.driver = webdriver.Edge(service=Service(data['user_conf']['driver_path']))
+        self.user_email = data['user_conf']['email']
+        self.user_password = data['user_conf']['password']
+        self.browser_driver = webdriver.Edge(service=Service(data['user_conf']['driver_path']))
         self.logs = data['user_conf']['logs']
 
         # LinkedIn configuration
-        self.questions_answers = data['linkedin_question_answer']
-        self.filters = data['linkedin_filters']
-        self.num_jobs_to_apply = data['num_jobs_to_apply']
+        self.linkedin_questions_answers = data['linkedin_questions_answers']
+        self.linkedin_filters = data['linkedin_filters']
+        self.linkedin_keywords_and_applications_number_to_apply = data['linkedin_keywords_and_applications_number_to_apply']
+        self.linkedin_location = data['linkedin_location']
+
+        # Amount of jobs applied or not
+        self.jobs_applied = 0
+        self.jobs_already_applied = 0
+        self.jobs_not_applied = 0
 
         if self.logs:
-            print("EasyApplyLinkedin was successfully initialized with configure data")
+            print("EasyApplyLinkedin was successfully initialized with config.json data")
 
     def login_linkedin(self):
         """Open LinkedIn log in page, enter email and password and log in to LinkedIn"""
 
         # Open LinkedIn log in page
-        self.driver.get('https://www.linkedin.com/login')
+        self.browser_driver.get('https://www.linkedin.com/login')
+        self.browser_driver.maximize_window()
 
         # Enter email and press enter key
-        login_email = self.driver.find_element(By.NAME, 'session_key')
+        login_email = self.browser_driver.find_element(By.NAME, 'session_key')
         login_email.clear()
-        login_email.send_keys(self.email)
+        login_email.send_keys(self.user_email)
 
         # Enter password and press enter key
-        login_pass = self.driver.find_element(By.NAME, 'session_password')
+        login_pass = self.browser_driver.find_element(By.NAME, 'session_password')
         login_pass.clear()
-        login_pass.send_keys(self.password)
+        login_pass.send_keys(self.user_password)
         time.sleep(3)
 
         # Press enter key to log in
         login_pass.send_keys(Keys.RETURN)
 
         if self.logs:
-            print(f'\nLogged in to LinkedIn with email = {self.email} and password = {self.password}')
+            print(f'\nLogged in to LinkedIn with email = {self.user_email} and password = {self.user_password}')
 
     def load_jobs_page(self):
         """Go to LinkedIn job page"""
-
+        time.sleep(20)
         # Press the job button
-        self.driver.find_element(By.LINK_TEXT, 'Jobs').click()
+        self.browser_driver.find_element(By.LINK_TEXT, 'Jobs').click()
 
         if self.logs:
             print('\nEntered jobs page')
 
-    def enter_keywords_and_location(self):
+    def enter_keywords_and_location(self,loc,key):
         """Search jobs with keyword and location"""
 
         # Enter keyword
-        search_keywords = self.driver.find_element(By.XPATH, '//input[starts-with(@id,"jobs-search-box-keyword")]')
+        search_keywords = self.browser_driver.find_element(By.XPATH, '//input[starts-with(@id,"jobs-search-box-keyword")]')
         search_keywords.clear()
-        search_keywords.send_keys(self.keywords)
+        search_keywords.send_keys(key)
         time.sleep(3)
 
         # Enter location
-        search_location = self.driver.find_element(By.XPATH, '//input[starts-with(@id,"jobs-search-box-location")]')
+        search_location = self.browser_driver.find_element(By.XPATH, '//input[starts-with(@id,"jobs-search-box-location")]')
         search_location.clear()
-        search_location.send_keys(self.location)
+        search_location.send_keys(loc)
         time.sleep(3)
 
         # Press enter key to apply the keyword and location to jobs search
         search_location.send_keys(Keys.RETURN)
 
         if self.logs:
-            print(f'\nApplied keyword = {self.keywords} and location = {self.location} to search')
+            print(f'\nApplied keyword = {key} and location = {loc} to search')
 
     def filter_jobs(self):
         """Apply filters to job search"""
 
         # Open all filters page
-        self.driver.find_element(By.XPATH, '//*[@id="search-reusables__filters-bar"]/div/div/button').click()
+        self.browser_driver.find_element(By.XPATH, '//*[@id="search-reusables__filters-bar"]/div/div/button').click()
         time.sleep(3)
 
         # Apply easy apply filter
-        if self.filters['easy_apply']:
-            self.driver.find_element(By.CLASS_NAME, 'jobs-search-advanced-filters__binary-toggle').click()
+        if self.linkedin_filters['easy_apply']:
+            self.browser_driver.find_element(By.CLASS_NAME, 'jobs-search-advanced-filters__binary-toggle').click()
 
             if self.logs:
                 print("\neasy_apply filter has been chosen")
@@ -101,9 +107,9 @@ class EasyApplyLinkedin:
             time.sleep(3)
 
         # Apply experience level filters
-        for index, (filter_key, filter_value) in enumerate(self.filters['experience level'].items()):
+        for index, (filter_key, filter_value) in enumerate(self.linkedin_filters['experience level'].items()):
             if filter_value:
-                self.driver.find_element(By.XPATH, f'//label[@for="advanced-filter-experience-{index + 1}"]').click()
+                self.browser_driver.find_element(By.XPATH, f'//label[@for="advanced-filter-experience-{index + 1}"]').click()
 
                 if self.logs:
                     print(f'{filter_key} filter has been chosen')
@@ -111,16 +117,16 @@ class EasyApplyLinkedin:
                 time.sleep(3)
 
         # Press apply filters to apply all filters that are checked in filter page
-        self.driver.find_element(By.XPATH, '//*[@class="justify-flex-end display-flex mv3 mh2"]/button[2]').click()
+        self.browser_driver.find_element(By.XPATH, '//*[@class="justify-flex-end display-flex mv3 mh2"]/button[2]').click()
 
         if self.logs:
             print('Filters applied to job search')
 
-    def find_job_offers(self):
+    def find_job_offers_and_apply(self):
         """Find all job applications of job search result, run the submit_apply() function to submit job applciation ( if didnt exceed the number of jobs to apply) and go to next page when all jobs are applied in current page"""
 
         # Get the amount of jobs available for applying
-        total_results = self.driver.find_element(By.CLASS_NAME, 'display-flex.t-12.t-black--light.t-normal')
+        total_results = self.browser_driver.find_element(By.CLASS_NAME, 'display-flex.t-12.t-black--light.t-normal')
         total_results_int = int(total_results.text.split(' ', 1)[0].replace(",", ""))
 
         if self.logs:
@@ -134,7 +140,7 @@ class EasyApplyLinkedin:
         while num_of_pages > 0:
 
             # Get the job application in current page
-            results = self.driver.find_elements(By.CLASS_NAME, 'ember-view.jobs-search-results__list-item.occludable-update.p0.relative.scaffold-layout__list-item')
+            results = self.browser_driver.find_elements(By.CLASS_NAME, 'ember-view.jobs-search-results__list-item.occludable-update.p0.relative.scaffold-layout__list-item')
 
             # Calculate the number of pages (only ones)
             if flag:
@@ -146,18 +152,17 @@ class EasyApplyLinkedin:
 
             # Submit application in each job offer
             for result in results:
-                hover = ActionChains(self.driver).move_to_element(result)
+                hover = ActionChains(self.browser_driver).move_to_element(result)
                 hover.perform()
                 self.submit_apply(result)
 
                 # If submitted the numer of jobs in the conf, exit code
                 if not self.num_jobs_to_apply:
-                    self.close_session()
-                    exit()
+                    return
 
             # Go to next page of job search result
             num_of_pages -= 1
-            self.driver.find_element(By.XPATH, f'//*[@aria-label="Page {page_number}"]').click()
+            self.browser_driver.find_element(By.XPATH, f'//*[@aria-label="Page {page_number}"]').click()
 
             if self.logs:
                 print(f'\nDone applying for jobs in page = {page_number - 1}\n')
@@ -176,28 +181,37 @@ class EasyApplyLinkedin:
 
         # If already applied, don't try to apply job application
         if self.already_applied():
+            self.jobs_already_applied += 1
             return
 
         # Try to apply job application for maximum 5 times
         num_of_submit_tries = 0
-        while not self.submit_application() and num_of_submit_tries < 5:
+        while num_of_submit_tries < 5:
             if self.logs:
                 print(f'Try to submit number = {num_of_submit_tries + 1}')
 
+            self.choose_cv()
             self.next_step()
             self.answer_additional_questions()
             self.review_application()
+            if self.submit_application():
+                break
+
             num_of_submit_tries += 1
 
         # If didn't apply in 5 tries exit job application
         if num_of_submit_tries > 4:
+            self.jobs_not_applied += 1
             self.exit_application()
+            return
 
         # If applied to job decrease the number of jobs left to apply
         self.num_jobs_to_apply -= 1
+        self.jobs_applied += 1
 
         if self.logs:
             print(f'{self.num_jobs_to_apply} jobs left to apply to')
+            print(f'{self.jobs_applied} total jobs applied')
 
         time.sleep(1)
 
@@ -208,7 +222,7 @@ class EasyApplyLinkedin:
 
         try:
             # Search easy apply button and click it if found
-            self.driver.find_element(By.XPATH, '//*[@class="jobs-apply-button--top-card"]/button').click()
+            self.browser_driver.find_element(By.XPATH, '//*[@class="jobs-apply-button--top-card"]/button').click()
 
         except NoSuchElementException:
             # If easy apply button not found
@@ -225,7 +239,7 @@ class EasyApplyLinkedin:
 
         try:
             # Search submit application button and click it if found
-            self.driver.find_element(By.XPATH, '//button[@aria-label="Submit application"]').send_keys(Keys.RETURN)
+            self.browser_driver.find_element(By.XPATH, '//button[@aria-label="Submit application"]').send_keys(Keys.RETURN)
 
             if self.logs:
                 print('Submit clicked')
@@ -233,7 +247,7 @@ class EasyApplyLinkedin:
             time.sleep(3)
 
             # Search dismiss button and click it if found
-            self.driver.find_element(By.XPATH, '//button[@aria-label="Dismiss"]').click()
+            self.browser_driver.find_element(By.XPATH, '//button[@aria-label="Dismiss"]').click()
 
             if self.logs:
                 print('Dismiss clicked')
@@ -252,7 +266,7 @@ class EasyApplyLinkedin:
 
         try:
             # Search next button and click it if found
-            self.driver.find_element(By.XPATH, '//*[@aria-label="Continue to next step"]').click()
+            self.browser_driver.find_element(By.XPATH, '//*[@aria-label="Continue to next step"]').click()
 
             if self.logs:
                 print('Next clicked')
@@ -262,12 +276,27 @@ class EasyApplyLinkedin:
             if self.logs:
                 print('Did not find next button')
 
+    def choose_cv(self):
+        """Choose last cv job application"""
+
+        try:
+            # Search last cv  and chosoe it if found
+            self.browser_driver.find_element(By.XPATH, '//*[@class="full-width mt1"]/div[1]/div/div[2]/div[1]/div[2]/button').click()
+
+            if self.logs:
+                print('Last cv chose')
+
+        except NoSuchElementException:
+            # If next button not found
+            if self.logs:
+                print('Did not choose last cv')
+
     def review_application(self):
         """Review application (1 step before submitting application)"""
 
         try:
             # Search review button and click it if found
-            self.driver.find_element(By.XPATH, '//*[@aria-label="Review your application"]').click()
+            self.browser_driver.find_element(By.XPATH, '//*[@aria-label="Review your application"]').click()
             if self.logs:
                 print('Review clicked')
 
@@ -280,21 +309,25 @@ class EasyApplyLinkedin:
         """Close the service that the driver opened"""
         if self.logs:
             print('\nService closed')
+            print(f'Jobs appleid this session = {self.jobs_applied}')
+            print(f'Jobs already appleid = {self.jobs_already_applied}')
+            print(f'Jobs not appleid = {self.jobs_not_applied}')
 
-        self.driver.close()
+
+        self.browser_driver.close()
 
     def exit_application(self):
         """Close job application"""
 
         try:
             # Find the x(used for exit) button press enter key
-            self.driver.find_element(By.XPATH,
+            self.browser_driver.find_element(By.XPATH,
                                      '//*[@class="artdeco-modal__dismiss artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--2 artdeco-button--tertiary ember-view"]').send_keys(
                 Keys.RETURN)
             time.sleep(3)
 
             # Find the exit confirmation and press enter key
-            self.driver.find_element(By.XPATH, '//button[@data-test-dialog-secondary-btn]').send_keys(Keys.RETURN)
+            self.browser_driver.find_element(By.XPATH, '//button[@data-test-dialog-secondary-btn]').send_keys(Keys.RETURN)
             time.sleep(3)
 
             if self.logs:
@@ -312,7 +345,7 @@ class EasyApplyLinkedin:
 
         try:
             # Find question in page and count them
-            window_data = self.driver.find_element(By.CLASS_NAME, 'pb4')
+            window_data = self.browser_driver.find_element(By.CLASS_NAME, 'pb4')
             num_of_questions = self.num_of_qestions_to_answer(window_data)
 
             if self.logs:
@@ -343,9 +376,9 @@ class EasyApplyLinkedin:
         question = question.lower().split(' ')
 
         # Search if self.questions_answers (linkedin_question_answer from configure file) keys match a word from the question. If there is a match return the value of the key else return 1
-        for q in self.questions_answers:
+        for q in self.linkedin_questions_answers:
             if q in question:
-                return self.questions_answers[q]
+                return self.linkedin_questions_answers[q]
         return 1
 
     def answer_question(self, i):
@@ -353,8 +386,8 @@ class EasyApplyLinkedin:
 
         try:
             # Find a question number i and get answer from find_answer_for_question() functon and answer question
-            question_label = self.driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/div/div/div/input')
-            question_text = self.driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]').text
+            question_label = self.browser_driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/div/div/div/input')
+            question_text = self.browser_driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]').text
             time.sleep(3)
             answer = self.find_answer_for_question(question_text)
             question_label.clear()
@@ -377,7 +410,7 @@ class EasyApplyLinkedin:
         try:
             # Find dropdown options
             dropdown_options = Select(
-                self.driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/div/div/select')).options
+                self.browser_driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/div/div/select')).options
 
             # If one of the options in drop down is Yes or Professional, choose it
             for option in dropdown_options:
@@ -388,11 +421,11 @@ class EasyApplyLinkedin:
                     answer_found = 'Professional'
 
                 if answer_found:
-                    self.driver.find_element(By.XPATH,
+                    self.browser_driver.find_element(By.XPATH,
                                              f'//*[@class="pb4"]/div[{i + 1}]/div/div/select/option[text()="{answer_found}"]').click()
 
                     if self.logs:
-                        dropdown = self.driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/div')
+                        dropdown = self.browser_driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/div')
                         print(f'Dropdown = {dropdown.text}')
                         print(f'Chose {answer_found} from dropdown')
 
@@ -409,15 +442,23 @@ class EasyApplyLinkedin:
         try:
             # TODO add question and answer
             # Find the first option in the checkbox and check it
-            self.driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/fieldset/div/div[1]/label').click()
+            checkbox_data = self.browser_driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/fieldset')
+            option_num = 1
+
+            if ('require sponsorship for employment visa' in checkbox_data.text) or ("Master's " in checkbox_data.text):
+                self.browser_driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/fieldset/div/div[2]/label').click()
+                option_num = 2
+
+            else:
+                self.browser_driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/fieldset/div/div[1]/label').click()
 
             if self.logs:
-                checkbox_data = self.driver.find_element(By.XPATH, f'//*[@class="pb4"]/div[{i + 1}]/fieldset')
-                checkbox_options = self.driver.find_element(By.XPATH,
+
+                checkbox_options = self.browser_driver.find_element(By.XPATH,
                                                             f'//*[@class="pb4"]/div[{i + 1}]/fieldset/div').text
                 checkbox_options = checkbox_options.split('\n')
                 print(f'Checkbox = {checkbox_data.text}')
-                print(f'{checkbox_options[0]} has been checked')
+                print(f'{checkbox_options[option_num-1]} has been checked')
 
         except NoSuchElementException:
             # If didn't find and answer to check
@@ -425,7 +466,8 @@ class EasyApplyLinkedin:
                 print('Did not find check box or an option to check')
 
 
-def find_job():
+if __name__ == "__main__":
+
     with open('config.json') as config_file:
         conf = json.load(config_file)
 
@@ -434,19 +476,18 @@ def find_job():
     bot.login_linkedin()
     time.sleep(3)
 
-    bot.load_jobs_page()
-    time.sleep(3)
+    for location in bot.linkedin_location:
+        for keyword, applications_number_to_apply in bot.linkedin_keywords_and_applications_number_to_apply.items():
+            bot.load_jobs_page()
+            time.sleep(3)
 
-    bot.enter_keywords_and_location()
-    time.sleep(3)
+            bot.enter_keywords_and_location(location, keyword)
+            time.sleep(3)
 
-    bot.filter_jobs()
-    time.sleep(3)
+            bot.filter_jobs()
+            time.sleep(3)
 
-    bot.find_job_offers()
+            bot.num_jobs_to_apply = applications_number_to_apply
+            bot.find_job_offers_and_apply()
 
-    bot.close_session()
-
-
-if __name__ == "__main__":
-    find_job()
+bot.close_session()
